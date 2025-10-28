@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app-deployment
+  labels:
+    app: flask-app
+spec:
+  replicas: 3 # Run 3 pods for high availability
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        #
+        # IMPORTANT: Replace YOUR-USERNAME with your GitHub username
+        #
+        image: ghcr.io/YOUR-USERNAME/k8s-ci-cd-demo:latest
+        imagePullPolicy: Always # Always pull the latest image
+        ports:
+        - containerPort: 5000
+        env:
+        - name: WELCOME_MESSAGE
+          value: "This app was deployed from a K8s manifest!"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-service
+spec:
+  type: LoadBalancer # Exposes the service externally using a cloud provider's LB
+  selector:
+    app: flask-app # Connects this service to the pods from the Deployment
+  ports:
+    - protocol: TCP
+      port: 80       # The port the *service* will be available on
+      targetPort: 5000 # The port the *container* is running on
